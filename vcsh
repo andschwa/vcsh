@@ -108,6 +108,7 @@ help() {
    list-tracked         List all files tracked by vcsh
    list-tracked-by \\
         <repo>          List files tracked by a repository
+   mr                   Install default .mrconfig file
    pull                 Pull from all vcsh remotes
    push                 Push to vcsh remotes
    rename <repo> \\
@@ -249,6 +250,17 @@ list_tracked() {
 list_tracked_by() {
 	use
 	git ls-files | sort -u
+}
+
+mr() {
+	mkdir -p .config/mr/config.d
+	mkdir -p .config/mr/available.d
+	echo "[DEFAULT]
+git_gc = git gc "$@"
+jobs = 5
+
+include = cat $(pwd)/.config/mr/config.d/*
+" > .mrconfig
 }
 
 pull() {
@@ -415,6 +427,7 @@ case "$VCSH_COMMAND" in
 	ente|ent|en) VCSH_COMMAND=enter;;
 	hel|he) VCSH_COMMAND=help;;
 	ini|in) VCSH_COMMAND=init;;
+	mr) VCSH_COMMAND=mr;;
 	pul) VCSH_COMMAND=pull;;
 	pus) VCSH_COMMAND=push;;
 	renam|rena|ren|re) VCSH_COMMAND=rename;;
@@ -433,6 +446,8 @@ if [ "$VCSH_COMMAND" = 'clone' ]; then
 	[ -z "$VCSH_REPO_NAME" ] && fatal "$VCSH_COMMAND: could not determine repository name" 1
 	export VCSH_REPO_NAME
 	export GIT_DIR="$VCSH_REPO_D/$VCSH_REPO_NAME.git"
+elif [ "$VCSH_COMMAND" = 'mr' ]; then
+	[ -r ".mrconfig" ] && fatal "$VCSH_COMMAND: .mrconfig already exists!"
 elif [ "$VCSH_COMMAND" = 'version' ]; then
 	echo "$SELF $VERSION"
 	git version
